@@ -15,6 +15,7 @@ gst_deps = [
 
 ufo_deps = [
   ufo_dep,
+  dependency('OpenCL'),
 ]
 
 executable('gst',

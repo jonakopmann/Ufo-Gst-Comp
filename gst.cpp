@@ -9,9 +9,7 @@
 #include <chrono>
 #include <fmt/core.h>
 
-#define WIDTH 512u
-#define HEIGHT 512u
-#define NUMBER 1000u
+#include "values.h"
 
 GST_DEBUG_CATEGORY(appsrc_pipeline_debug);
 #define GST_CAT_DEFAULT appsrc_pipeline_debug
@@ -113,7 +111,7 @@ new_sample(GstElement* appsink, App* app)
     g_signal_emit_by_name(appsink, "pull-sample", &sample, NULL);
 
     GstBuffer* buffer = gst_sample_get_buffer(sample);
-    gst_buffer_extract(buffer, 0, app->data, HEIGHT * WIDTH);
+    gst_buffer_extract(buffer, 0, app->data, HEIGHT * WIDTH * 4);
 
     /*FILE* pFile;
     pFile = fopen(fmt::format("{}", app->count++).c_str(), "wb");
@@ -186,7 +184,7 @@ main(int argc, char* argv[])
     g_signal_connect(app->appsrc, "enough-data", G_CALLBACK(stop_feed), app);
 
     /* set the caps on the source */
-    gst_video_info_set_format(&info, GST_VIDEO_FORMAT_GRAY8, WIDTH, HEIGHT);
+    gst_video_info_set_format(&info, GST_VIDEO_FORMAT_RGBx, WIDTH, HEIGHT);
     caps = gst_video_info_to_caps(&info);
     g_object_set(app->appsrc, "caps", caps, "format", GST_FORMAT_TIME, NULL);
 
@@ -196,17 +194,17 @@ main(int argc, char* argv[])
     g_signal_connect(app->appsink, "new-sample", G_CALLBACK(new_sample), app);
     g_object_set(app->appsink, "wait-on-eos", TRUE, "emit-signals", TRUE, NULL);
 
-    app->data = g_malloc(WIDTH * HEIGHT);
+    app->data = g_malloc(WIDTH * HEIGHT * 4);
     app->buffer = gst_buffer_list_new_sized(NUMBER);
 
     gst_buffer_list_make_writable(app->buffer);
     for (guint i = 0; i < NUMBER; i++)
     {
-        GstBuffer* buffer = gst_buffer_new_allocate(NULL, HEIGHT * WIDTH, NULL);
+        GstBuffer* buffer = gst_buffer_new_allocate(NULL, HEIGHT * WIDTH * 4, NULL);
 
         if (i == 0)
         {
-            gst_buffer_memset(buffer, 0, 0xFF, HEIGHT * WIDTH / 2);
+            gst_buffer_memset(buffer, 0, 0xFF, HEIGHT * WIDTH * 2);
         }
         gst_buffer_list_add(app->buffer, buffer);
     }
